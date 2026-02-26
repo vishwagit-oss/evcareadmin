@@ -35,8 +35,19 @@ export default function LoginPage() {
       }
       window.location.href = "/dashboard";
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Sign in failed";
-      setError(message);
+      const e = err as { name?: string; code?: string; message?: string };
+      const message = e?.message ?? (err instanceof Error ? err.message : "Sign in failed");
+      const isUnconfirmed =
+        e?.name === "UserNotConfirmedException" ||
+        e?.code === "UserNotConfirmedException" ||
+        /not confirmed|confirm your|verification|verify your email/i.test(String(message));
+      if (isUnconfirmed) {
+        setError(
+          "Your email isn’t verified yet. Go to Verify your email, enter your email to get a new 6-digit code, then enter the code. After that you can log in (and an admin may need to approve you)."
+        );
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -63,6 +74,13 @@ export default function LoginPage() {
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
             {error}
+            {error.includes("isn't verified") && (
+              <p className="mt-2">
+                <Link href="/verify-email" className="text-blue-600 font-medium hover:underline">
+                  Open Verify your email →
+                </Link>
+              </p>
+            )}
           </div>
         )}
 
