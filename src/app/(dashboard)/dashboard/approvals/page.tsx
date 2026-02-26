@@ -24,12 +24,13 @@ export default function ApprovalsPage() {
     const token = await getAuthToken();
     if (!token) return;
     const res = await fetch("/api/admin/pending", { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setError("Failed to load pending users");
+      setError(data.error ?? "Failed to load pending users");
       setPending([]);
       return;
     }
-    const data = await res.json();
+    setError("");
     setPending(data.pending ?? []);
   };
 

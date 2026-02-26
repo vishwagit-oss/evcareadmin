@@ -18,7 +18,7 @@ export function signUp(
   email: string,
   password: string,
   name: string
-): Promise<{ userSub: string }> {
+): Promise<{ userSub: string; cognitoUsername: string }> {
   return new Promise((resolve, reject) => {
     const attributes = [
       new CognitoUserAttribute({ Name: "email", Value: email }),
@@ -34,16 +34,17 @@ export function signUp(
         reject(err);
         return;
       }
-      resolve({ userSub: result?.user.getUsername() ?? "" });
+      const cognitoUsername = result?.user.getUsername() ?? username;
+      resolve({ userSub: cognitoUsername, cognitoUsername });
     });
   });
 }
 
-/** Confirm sign-up with the 6-digit code sent to email. Use email (alias) as username. */
-export function confirmRegistration(email: string, code: string): Promise<void> {
+/** Confirm sign-up with the 6-digit code. username = Cognito internal username from signUp (e.g. user_123_abc). */
+export function confirmRegistration(username: string, code: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({
-      Username: email.trim(),
+      Username: username.trim(),
       Pool: userPool,
     });
     cognitoUser.confirmRegistration(code.trim(), true, (err) => {
@@ -56,11 +57,11 @@ export function confirmRegistration(email: string, code: string): Promise<void> 
   });
 }
 
-/** Resend verification code to email. Use email (alias) as username. */
-export function resendConfirmationCode(email: string): Promise<void> {
+/** Resend verification code. username = Cognito internal username from signUp. */
+export function resendConfirmationCode(username: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({
-      Username: email.trim(),
+      Username: username.trim(),
       Pool: userPool,
     });
     cognitoUser.resendConfirmationCode((err) => {

@@ -10,6 +10,7 @@ function VerifyEmailForm() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") ?? "";
   const name = searchParams.get("name") ?? "";
+  const username = searchParams.get("username") ?? "";
 
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -20,6 +21,10 @@ function VerifyEmailForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!username) {
+      setError("Verification link is missing data. Please sign up again to get a new link.");
+      return;
+    }
     if (!email) {
       setError("Missing email. Please sign up again.");
       return;
@@ -28,7 +33,7 @@ function VerifyEmailForm() {
     setLoading(true);
 
     try {
-      await confirmRegistration(email, code);
+      await confirmRegistration(username, code);
       // Notify our backend: user verified email → record pending approval & email admin
       const res = await fetch("/api/auth/confirm-signup", {
         method: "POST",
@@ -53,12 +58,15 @@ function VerifyEmailForm() {
   };
 
   const handleResend = async () => {
-    if (!email) return;
+    if (!username) {
+      setError("Cannot resend: please sign up again to get a new verification link.");
+      return;
+    }
     setResendLoading(true);
     setError("");
     setResendSent(false);
     try {
-      await resendConfirmationCode(email);
+      await resendConfirmationCode(username);
       setResendSent(true);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to resend code");
@@ -81,11 +89,13 @@ function VerifyEmailForm() {
     );
   }
 
-  if (!email) {
+  if (!email || !username) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4">
         <div className="w-full max-w-sm p-8 text-center">
-          <p className="text-gray-600 mb-4">No email provided. Please complete sign up first.</p>
+          <p className="text-gray-600 mb-4">
+            {!username ? "This verification link is incomplete. Please sign up again to receive a new link and code." : "No email provided. Please complete sign up first."}
+          </p>
           <Link href="/register" className="text-blue-600 font-medium hover:underline">Sign up</Link>
         </div>
       </div>

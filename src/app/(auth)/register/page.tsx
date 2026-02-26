@@ -20,10 +20,14 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await signUp(email.trim(), password, name.trim());
+      const { cognitoUsername } = await signUp(email.trim(), password, name.trim());
       setSuccess(true);
-      // Redirect to verify-email so user can enter the code they received
-      const params = new URLSearchParams({ email: email.trim(), name: name.trim() });
+      // Redirect to verify-email with Cognito internal username (required for confirm/resend)
+      const params = new URLSearchParams({
+        email: email.trim(),
+        name: name.trim(),
+        username: cognitoUsername,
+      });
       setTimeout(() => {
         router.push(`/verify-email?${params.toString()}`);
         router.refresh();

@@ -16,6 +16,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ pending: result.rows });
   } catch (err) {
     console.error("[admin/pending]", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("user_approvals") || msg.includes("does not exist")) {
+      return NextResponse.json(
+        { error: "Database table user_approvals is missing. Run: npm run db:init (or add the user_approvals table from src/lib/schema.sql)." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
