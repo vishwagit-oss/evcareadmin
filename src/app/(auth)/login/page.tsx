@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { signIn } from "@/lib/cognito";
+import { signIn, signOut, getAuthToken } from "@/lib/cognito";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -17,6 +17,22 @@ export default function LoginPage() {
 
     try {
       await signIn(email.trim(), password);
+      const token = await getAuthToken();
+      if (!token) {
+        setError("Sign in failed");
+        setLoading(false);
+        return;
+      }
+      const res = await fetch("/api/auth/approval-status", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!data.approved) {
+        signOut();
+        setError("Your account is pending approval. You'll receive an email when an admin approves you. Then you can log in.");
+        setLoading(false);
+        return;
+      }
       window.location.href = "/dashboard";
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Sign in failed";

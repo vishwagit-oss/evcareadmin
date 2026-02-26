@@ -37,6 +37,20 @@ CREATE TABLE IF NOT EXISTS battery_alerts (
 
 CREATE INDEX IF NOT EXISTS idx_battery_alerts_vehicle_id ON battery_alerts(vehicle_id);
 
+-- User approvals: pending until admin approves (no login until approved)
+CREATE TABLE IF NOT EXISTS user_approvals (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email VARCHAR(255) NOT NULL UNIQUE,
+  name VARCHAR(255),
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  approved_at TIMESTAMP WITH TIME ZONE,
+  approved_by VARCHAR(255)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_approvals_email ON user_approvals(email);
+CREATE INDEX IF NOT EXISTS idx_user_approvals_status ON user_approvals(status);
+
 -- Function to auto-update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

@@ -18,11 +18,24 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
+// Strip sslmode from URL so our ssl config is used (avoids self-signed cert errors with RDS).
+function getConnectionConfig() {
+  try {
+    const url = new URL(DATABASE_URL);
+    url.searchParams.delete("sslmode");
+    url.searchParams.delete("ssl");
+    return {
+      connectionString: url.toString(),
+      ssl: { rejectUnauthorized: false },
+    };
+  } catch {
+    return { connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } };
+  }
+}
+
 async function initDb() {
-  const pool = new Pool({
-    connectionString: DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
-  });
+  const { connectionString, ssl } = getConnectionConfig();
+  const pool = new Pool({ connectionString, ssl });
 
   try {
     console.log("Connecting to database...");

@@ -39,6 +39,40 @@ export function signUp(
   });
 }
 
+/** Confirm sign-up with the 6-digit code sent to email. Use email (alias) as username. */
+export function confirmRegistration(email: string, code: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({
+      Username: email.trim(),
+      Pool: userPool,
+    });
+    cognitoUser.confirmRegistration(code.trim(), true, (err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+/** Resend verification code to email. Use email (alias) as username. */
+export function resendConfirmationCode(email: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const cognitoUser = new CognitoUser({
+      Username: email.trim(),
+      Pool: userPool,
+    });
+    cognitoUser.resendConfirmationCode((err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
 export function signIn(email: string, password: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const authDetails = new AuthenticationDetails({

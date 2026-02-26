@@ -10,7 +10,12 @@ import {
   BarChart3,
   LogOut,
   User,
+  UserCheck,
 } from "lucide-react";
+
+const ADMIN_EMAIL = (typeof process.env.NEXT_PUBLIC_EVCARE_ADMIN_EMAIL === "string" && process.env.NEXT_PUBLIC_EVCARE_ADMIN_EMAIL)
+  ? process.env.NEXT_PUBLIC_EVCARE_ADMIN_EMAIL
+  : "vishwagohil21@gmail.com";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -18,6 +23,8 @@ const navItems = [
   { href: "/dashboard/battery", label: "Battery", icon: Battery, sub: "Health Monitor" },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, sub: "Reports & Export" },
 ];
+
+const adminNavItem = { href: "/dashboard/approvals", label: "Approvals", icon: UserCheck, sub: "Approve new users" };
 
 export function DashboardNav() {
   const pathname = usePathname();
@@ -69,6 +76,25 @@ export function DashboardNav() {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        {user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && (() => {
+          const ItemIcon = adminNavItem.icon;
+          return (
+            <Link
+              href={adminNavItem.href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                pathname === adminNavItem.href
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              }`}
+            >
+              <ItemIcon className={`w-5 h-5 shrink-0 ${pathname === adminNavItem.href ? "text-blue-600" : "text-gray-500"}`} />
+              <div>
+                <span className="font-medium block">{adminNavItem.label}</span>
+                <span className="text-xs text-gray-500">{adminNavItem.sub}</span>
+              </div>
+            </Link>
+          );
+        })()}
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;

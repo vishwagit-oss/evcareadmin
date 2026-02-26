@@ -22,10 +22,12 @@ export default function RegisterPage() {
     try {
       await signUp(email.trim(), password, name.trim());
       setSuccess(true);
+      // Redirect to verify-email so user can enter the code they received
+      const params = new URLSearchParams({ email: email.trim(), name: name.trim() });
       setTimeout(() => {
-        router.push("/login");
+        router.push(`/verify-email?${params.toString()}`);
         router.refresh();
-      }, 2000);
+      }, 1500);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Sign up failed";
       setError(message);
@@ -38,8 +40,8 @@ export default function RegisterPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4">
         <div className="w-full max-w-sm p-8 text-center">
-          <div className="text-green-600 font-semibold mb-2">Account created!</div>
-          <p className="text-gray-500 text-sm">Redirecting to sign in...</p>
+          <div className="text-green-600 font-semibold mb-2">Check your email</div>
+          <p className="text-gray-500 text-sm">We sent a verification code. Enter it on the next page.</p>
         </div>
       </div>
     );
