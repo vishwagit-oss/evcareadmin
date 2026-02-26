@@ -10,9 +10,14 @@ export async function verifyCognitoToken(token: string): Promise<{
 } | null> {
   try {
     const { payload } = await jwtVerify(token, jwks);
+    const email =
+      (payload.email as string | undefined) ||
+      (payload.preferred_username as string | undefined);
+    const emailStr =
+      typeof email === "string" && email.includes("@") ? email : undefined;
     return {
       sub: payload.sub as string,
-      email: payload.email as string | undefined,
+      email: emailStr,
     };
   } catch {
     return null;

@@ -115,12 +115,20 @@ cd C:\Users\vishw\evcare-admin
 scp -i "C:\path\to\your-key.pem" -r . ec2-user@YOUR_EC2_PUBLIC_IP:~/evcare-admin
 ```
 
-Or use **git** on EC2:
+Or use **git** on EC2 (recommended):
 
+**First time (clone):**
 ```bash
 # On EC2
-git clone YOUR_REPO_URL evcare-admin
+git clone https://github.com/vishwagit-oss/evcareadmin.git evcare-admin
 cd evcare-admin
+```
+
+**Later (pull latest):**
+```bash
+# On EC2
+cd ~/evcare-admin
+git pull origin master
 ```
 
 ### C. On EC2: env, build, run

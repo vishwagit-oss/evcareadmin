@@ -61,6 +61,16 @@ export async function PUT(
       license_plate,
     } = body;
 
+    // Get current battery_health_score before update (to send alert only when crossing below threshold)
+    const currentRow = await query(
+      `SELECT battery_health_score FROM vehicles WHERE id = $1 AND cognito_user_id = $2`,
+      [id, auth.sub]
+    );
+    const oldBatteryScore =
+      currentRow.rows.length > 0 && currentRow.rows[0].battery_health_score != null
+        ? Number(currentRow.rows[0].battery_health_score)
+        : null;
+
     const result = await query(
       `UPDATE vehicles SET
         vin = COALESCE($2, vin),
@@ -95,11 +105,11 @@ export async function PUT(
     const updated = result.rows[0];
     const newScore =
       battery_health_score != null ? Number(battery_health_score) : null;
-    if (
+    const crossedBelowThreshold =
       newScore != null &&
       newScore < BATTERY_ALERT_THRESHOLD &&
-      process.env.AWS_REGION
-    ) {
+      (oldBatteryScore === null || oldBatteryScore >= BATTERY_ALERT_THRESHOLD);
+    if (crossedBelowThreshold && process.env.AWS_REGION) {
       const toEmail =
         auth.email ?? process.env.EVCARE_ALERT_EMAIL ?? "";
       if (toEmail) {
@@ -117,6 +127,14 @@ export async function PUT(
           vehicleId: id,
           score: newScore,
           sent,
+        });
+      } else {
+        console.warn(
+          "Battery alert skipped: no recipient email. Set EVCARE_ALERT_EMAIL or ensure Cognito user has email in token."
+        );
+        logEvent("Battery alert skipped (no recipient email)", "warn", {
+          vehicleId: id,
+          score: newScore,
         });
       }
     }

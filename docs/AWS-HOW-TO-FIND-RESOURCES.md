@@ -40,6 +40,14 @@ Use the same **region** as in your app (e.g. **us-east-2**). Switch region in th
 | **RDS (PostgreSQL)** | **RDS** → Databases → your DB → **Connectivity & security** (endpoint, port) |
 | **S3 bucket** | **S3** → Buckets → e.g. `evcare-reports` (`EVCARE_S3_BUCKET`) |
 | **SES** | **Amazon SES** → **Verified identities** (email/domain for `EVCARE_ALERT_FROM`) |
+
+### Battery alert email (SES) checklist
+
+- **Region**: Must match your app (`AWS_REGION=us-east-2`). Your SES identity is in **US East (Ohio)**.
+- **From address**: `EVCARE_ALERT_FROM` must be a **verified** SES identity (e.g. `vishwagohil21@gmail.com`). SES → Verified identities → the address must show **Verified**.
+- **To address**: Alerts go to the logged-in user’s email from the Cognito token, or to `EVCARE_ALERT_EMAIL` if the token has no email. In SES **sandbox**, both From and To must be verified.
+- **When it sends**: Only when you **update** a vehicle and battery health **crosses below 50%** (e.g. 55 → 45). It does not send again on every save below 50.
+- **If no email arrives**: Run `node scripts/check-aws-resources.js` and fix any SES warning. Check server logs for “Battery alert skipped: no recipient email” or “SES send failed”.
 | **Secrets Manager** | **Secrets Manager** → Secrets → e.g. `evcare/production/config` |
 | **CloudWatch Logs** | **CloudWatch** → Log groups → e.g. `/evcare/admin` |
 | **EC2 (app server)** | **EC2** → Instances → instance running Next.js |

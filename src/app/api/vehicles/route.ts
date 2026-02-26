@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAuth } from "@/lib/api-auth";
+import { sendBatteryAlertEmail } from "@/lib/ses";
 import { logEvent } from "@/lib/cloudwatch";
+
+const BATTERY_ALERT_THRESHOLD = 50;
 
 // GET /api/vehicles - List vehicles for authenticated user
 export async function GET(request: NextRequest) {
@@ -82,8 +85,34 @@ export async function POST(request: NextRequest) {
         license_plate ?? "",
       ]
     );
+    const inserted = result.rows[0];
+    const score = Number(battery_health_score);
+    if (score < BATTERY_ALERT_THRESHOLD && process.env.AWS_REGION) {
+      const toEmail = auth.email ?? process.env.EVCARE_ALERT_EMAIL ?? "";
+      if (toEmail) {
+        const sent = await sendBatteryAlertEmail(toEmail, {
+          vin: inserted.vin,
+          make: inserted.make,
+          model: inserted.model,
+          battery_health_score: inserted.battery_health_score,
+        });
+        await query(
+          `INSERT INTO battery_alerts (vehicle_id, threshold, email_sent) VALUES ($1, $2, $3)`,
+          [inserted.id, BATTERY_ALERT_THRESHOLD, sent]
+        );
+        logEvent("Battery alert sent (on add)", sent ? "info" : "warn", {
+          vehicleId: inserted.id,
+          score,
+          sent,
+        });
+      } else {
+        console.warn(
+          "Battery alert skipped: no recipient email. Set EVCARE_ALERT_EMAIL or ensure Cognito user has email in token."
+        );
+      }
+    }
     logEvent("Vehicle added", "info", { userId: sub, vin: vin });
-    return NextResponse.json(result.rows[0], { status: 201 });
+    return NextResponse.json(inserted, { status: 201 });
   } catch (err) {
     console.error("Error adding vehicle:", err);
     const dbErr = err as { code?: string; message?: string };
