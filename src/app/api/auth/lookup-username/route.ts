@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import {
   CognitoIdentityProviderClient,
   ListUsersCommand,
-  AdminResendConfirmationCodeCommand,
+  ResendConfirmationCodeCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 
 const region = process.env.AWS_REGION ?? "us-east-2";
 const userPoolId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID;
+const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
 
 /**
  * For unconfirmed users: look up Cognito username by email and optionally resend verification code.
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
   if (!email || !email.includes("@")) {
     return NextResponse.json({ error: "Valid email required" }, { status: 400 });
   }
-  if (!userPoolId) {
+  if (!userPoolId || !clientId) {
     return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
   }
 
@@ -62,8 +63,8 @@ export async function POST(request: Request) {
     if (resend) {
       try {
         await client.send(
-          new AdminResendConfirmationCodeCommand({
-            UserPoolId: userPoolId,
+          new ResendConfirmationCodeCommand({
+            ClientId: clientId,
             Username: username,
           })
         );
