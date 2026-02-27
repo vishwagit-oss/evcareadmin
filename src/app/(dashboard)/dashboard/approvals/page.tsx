@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAuthToken } from "@/lib/cognito";
 import { UserCheck } from "lucide-react";
@@ -12,6 +13,7 @@ const ADMIN_EMAIL = (typeof process.env.NEXT_PUBLIC_EVCARE_ADMIN_EMAIL === "stri
 type PendingUser = { id: string; email: string; name: string | null; status: string; created_at: string };
 
 export default function ApprovalsPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [pending, setPending] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +21,13 @@ export default function ApprovalsPage() {
   const [approving, setApproving] = useState<string | null>(null);
 
   const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+  // Only vishwagohil21@gmail.com (admin) may see Approvals. Others redirect to dashboard.
+  useEffect(() => {
+    if (user && !isAdmin) {
+      router.replace("/dashboard");
+    }
+  }, [user, isAdmin, router]);
 
   const fetchPending = async () => {
     const token = await getAuthToken();
@@ -63,8 +72,8 @@ export default function ApprovalsPage() {
 
   if (!isAdmin) {
     return (
-      <div className="p-8">
-        <p className="text-gray-600">You don’t have access to this page.</p>
+      <div className="p-8 flex items-center justify-center">
+        <p className="text-gray-600">Redirecting...’</p>
       </div>
     );
   }
