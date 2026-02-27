@@ -11,9 +11,7 @@ export async function GET(request: NextRequest) {
     const statusResult = await query(
       `SELECT status, COUNT(*) as count
        FROM vehicles
-       WHERE cognito_user_id = $1
-       GROUP BY status`,
-      [auth.sub]
+       GROUP BY status`
     );
 
     const byStatus = statusResult.rows.map((r) => ({
@@ -32,10 +30,8 @@ export async function GET(request: NextRequest) {
         END as range,
         COUNT(*) as count
        FROM vehicles
-       WHERE cognito_user_id = $1
        GROUP BY 1
-       ORDER BY 1`,
-      [auth.sub]
+       ORDER BY 1`
     );
 
     const batteryDistribution = batteryResult.rows.map((r) => ({

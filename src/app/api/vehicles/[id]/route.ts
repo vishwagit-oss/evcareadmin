@@ -22,8 +22,8 @@ export async function GET(
               current_charge_percent, battery_health_score, status, license_plate,
               created_at, updated_at
        FROM vehicles
-       WHERE id = $1 AND cognito_user_id = $2`,
-      [id, auth.sub]
+       WHERE id = $1`,
+      [id]
     );
     if (result.rows.length === 0) {
       return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
@@ -63,8 +63,8 @@ export async function PUT(
 
     // Get current battery_health_score before update (to send alert only when crossing below threshold)
     const currentRow = await query(
-      `SELECT battery_health_score FROM vehicles WHERE id = $1 AND cognito_user_id = $2`,
-      [id, auth.sub]
+      `SELECT battery_health_score FROM vehicles WHERE id = $1`,
+      [id]
     );
     const oldBatteryScore =
       currentRow.rows.length > 0 && currentRow.rows[0].battery_health_score != null
@@ -82,7 +82,7 @@ export async function PUT(
         status = COALESCE($8, status),
         license_plate = COALESCE($9, license_plate),
         updated_at = CURRENT_TIMESTAMP
-       WHERE id = $1 AND cognito_user_id = $10
+       WHERE id = $1
        RETURNING id, cognito_user_id, vin, make, model, battery_capacity_kwh,
                  current_charge_percent, battery_health_score, status, license_plate,
                  created_at, updated_at`,
@@ -96,7 +96,6 @@ export async function PUT(
         battery_health_score != null ? Number(battery_health_score) : null,
         status,
         license_plate,
-        auth.sub,
       ]
     );
     if (result.rows.length === 0) {
@@ -163,8 +162,8 @@ export async function DELETE(
 
   try {
     const result = await query(
-      "DELETE FROM vehicles WHERE id = $1 AND cognito_user_id = $2 RETURNING id",
-      [id, auth.sub]
+      "DELETE FROM vehicles WHERE id = $1 RETURNING id",
+      [id]
     );
     if (result.rows.length === 0) {
       return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });

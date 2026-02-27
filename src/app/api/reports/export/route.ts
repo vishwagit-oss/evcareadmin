@@ -16,9 +16,7 @@ export async function GET(request: NextRequest) {
     const result = await query(
       `SELECT vin, make, model, status, battery_health_score, current_charge_percent, battery_capacity_kwh
        FROM vehicles
-       WHERE cognito_user_id = $1
-       ORDER BY created_at DESC`,
-      [auth.sub]
+       ORDER BY created_at DESC`
     );
     const vehicles = result.rows;
 

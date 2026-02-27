@@ -16,9 +16,7 @@ export async function GET(request: NextRequest) {
         COUNT(*) FILTER (WHERE status = 'offline') as offline,
         COALESCE(AVG(battery_health_score), 0)::numeric(5,2) as avg_battery_health,
         COUNT(*) FILTER (WHERE battery_health_score < 70) as needs_attention
-       FROM vehicles
-       WHERE cognito_user_id = $1`,
-      [auth.sub]
+       FROM vehicles`
     );
 
     const row = statsResult.rows[0];

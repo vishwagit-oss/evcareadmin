@@ -19,9 +19,7 @@ export async function GET(request: NextRequest) {
               current_charge_percent, battery_health_score, status, license_plate,
               created_at, updated_at
        FROM vehicles
-       WHERE cognito_user_id = $1
-       ORDER BY created_at DESC`,
-      [sub]
+       ORDER BY created_at DESC`
     );
     logEvent("Vehicles listed", "info", { userId: sub, count: result.rows.length });
     return NextResponse.json(result.rows);
